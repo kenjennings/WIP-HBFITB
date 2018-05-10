@@ -1,3 +1,5 @@
+; hbfitb Memory.asm
+;
 ;===============================================================================
 ; $00-$FF  PAGE ZERO (256 bytes)
 ; $00-$7F  OS variables.
@@ -20,8 +22,14 @@ zbHigh   .byte 0
 zbLow2   .byte 0
 zbHigh2  .byte 0
 
+zbCopyCount = zbParam9
+
 zwAddr1 = zbLow
 zwAddr2 = zbLow2
+
+zbFlameIndex .byte 0
+zbTextIndex  .byte 0
+
 
 ; Default colors.  Modifiable later to change the screen....
 
@@ -77,13 +85,13 @@ screenAddress2     .word 0
 
 ;===============================================================================
 ; Part of DUP may be overlapped by a program when MEMSAVE file is present to
-; allow the swapping.  However, the game programs are fairly simple.  There 
-; is no reason to do anything clever in low memory/DOS memory outside of 
+; allow the swapping.  However, the game programs are fairly simple.  There
+; is no reason to do anything clever in low memory/DOS memory outside of
 ; Page 0.  Thus program start addresses should use the LOMEM_DOS_DUP symbol
 ; and then do alignment as needed from there.
 
 ; LOMEM_DOS =     $2000 ; First available memory after DOS
-; LOMEM_DOS_DUP = $3308 ; First available memory after DOS and DUP 
+; LOMEM_DOS_DUP = $3308 ; First available memory after DOS and DUP
 
 
 ;===============================================================================
@@ -95,120 +103,117 @@ screenAddress2     .word 0
 ; Create the custom game screen
 ;
 ; This is 27 lines of Mode 2 text (aka BASIC GRAPHICS 0)
-; Why 27?  Because we can. 
+; Why 27?  Because we can.
 ;
 ; Actually, the first and last lines are use for diagnostic
 ; information when the DO_DIAG value is set.  This allows
-; the 25 lines between them to occupy the exact same scan 
+; the 25 lines between them to occupy the exact same scan
 ; lines whether or not DO_DIAG is set.
 ;
-; See ScreenSetMode to change the Display List to text modes 2, 4, or 6 
-; which all share the same number of scanlines per mode line, so the 
+; See ScreenSetMode to change the Display List to text modes 2, 4, or 6
+; which all share the same number of scanlines per mode line, so the
 ; Display Lists are nearly identical.
 ;
-; mDL_LMS macro requires ANTIC.asm.  That should have already been included, 
+; mDL_LMS macro requires ANTIC.asm.  That should have already been included,
 ; since the program is working on a screen display..
 
 	ORG $4000
 
 SCREENRAM ; Imitate the C64 convention of a full-screen for a display mode.
+; TEXT = COLPF0
+; $83  = # (flame  COLPF2)
+; $84  = $ (flame  COLPF2)
+; $85  = % (flame  COLPF2)
+; $46  = & (candle COLPF1)
+
 vsScreenRam
-	.byte "     $           %  "
-	.byte "  #  &   %    #  &  "
-	.byte "  &      &    &     "
-	.byte "       HAPPY        "
-	.byte "    %           #   "
-	.byte "    &           &   "
-	.byte "      BIRTHDAY     %"
-	.byte " #             $   &"
-	.byte " &             &    "
-	.byte "    %  STEVE!       "
-	.byte "    &         #     "
-	.byte "  $      %    &  $  "
-	.byte "  &      &       &  "
-; I'm too lazy to fix other code, leave a big buffer her for screen ram references
-	.ds [25*40] ; 25 lines for the screen.
-	
-SCREENDIAGRAM
-vsScreenDiagRam
-.if DO_DIAG=1 
-	.ds [2*40]  ; 2 lines for diagnostics
-.endif
+	.byte "     ",$83,"              "
+	.byte "     ",$86,"        ",$84,"     "
+	.byte "  ",$85,"           ",$86,"     "
+	.byte "  ",$86,"    HAPPY    ",$83,"   "
+	.byte "    ",$84,"           ",$86,"   "
+	.byte "    &              ",$85,""
+	.byte " ",$83,"    BIRTHDAY     ",$86,""
+	.byte " ",$86,"             ",$84,"    "
+	.byte "    ",$85,"          ",$86,"    "
+	.byte "    ",$86,"  STEVE!     ",$83," "
+	.byte "  ",$84,"               ",$86," "
+	.byte "  ",$86,"      ",$85,"          "
+	.byte "         ",$86,"    ",$84,"     "
+	.byte "              ",$86,"     "
 
-	.align $0400 ; Go to 1K boundary  to make sure display list 
-	             ; doesn't cross the 1K boundary.
+; Go to 1K boundary  to make sure display list
+; doesn't cross the 1K boundary.
+	.align $0400
 
-vsDisplayList
-.if DO_DIAG=0
-	.byte DL_BLANK_8   ; extra 8 blank to center 25 text lines
-.endif
 
-	.byte DL_BLANK_8   ; 8 blank scan lines
-	.byte DL_BLANK_4   ; 
+vsDisplayList ; 224 scan lines of ANTIC goodness
+	.byte DL_BLANK_8   ; 8 blank to center 14 mode 7 text lines
 
-.if DO_DIAG=1
-	mDL_LMS DL_TEXT_2, vsScreenRam+1000 ; show from last bytes.
-.endif
-
-	mDL_LMS DL_TEXT_7, vsScreenRam ; mode 2 text and init memory scan address
-	.rept 12
-	.byte DL_TEXT_7   ; 24 more lines of mode 2 text (memory scan is automatic)
+	mDL_LMS DL_TEXT_7, vsScreenRam ; mode 7 text and initial memory scan address
+	.rept 13
+	.byte DL_TEXT_7   ; 13 more lines of mode 7 text (memory scan is automatic)
 	.endr
-
-.if DO_DIAG=1
-	mDL_LMS DL_TEXT_2, vsScreenRam+1040 ; show from last bytes.
-.endif
 
 	.byte DL_JUMP_VB    ; End.  Wait for Vertical Blank.
 	.word vsDisplayList ; Restart the Display List
 
+; Align to next nearest 1/2 K boundary for Mode 7 character set
+	.align $0200
 
-	ALIGN $0400
-	
 CSET1 .ds 512
 CSET2 .ds 512
 CSET3 .ds 512
 
 FLAME1
 	.byte %00000000
-	.byte %01100000
-	.byte %01111000
-	.byte %11111100
-	.byte %11111111
-	.byte %11111111
-	.byte %01111110
-	.byte %00011000
+	.byte %01000000
+	.byte %01110000
+	.byte %11111000
+	.byte %11111110
+	.byte %11111110
+	.byte %01111100
+	.byte %00010000
 
 FLAME2
 	.byte %00000000
-	.byte %00011000
-	.byte %00111100
-	.byte %01111110
-	.byte %11111111
-	.byte %11111111
-	.byte %01111110
-	.byte %00011000
+	.byte %00010000
+	.byte %00111000
+	.byte %01111100
+	.byte %11111110
+	.byte %11111110
+	.byte %01111100
+	.byte %00010000
 
 FLAME3
 	.byte %00000000
-	.byte %00001100
-	.byte %00011110
-	.byte %00111111
-	.byte %11111111
-	.byte %11111111
-	.byte %01111110
-	.byte %00011000
+	.byte %00001000
+	.byte %00011100
+	.byte %00111110
+	.byte %11111110
+	.byte %11111110
+	.byte %01111100
+	.byte %00010000
 
+CANDLE
+	.byte %00111100
+	.byte %00111000
+	.byte %00111000
+	.byte %00111000
+	.byte %00111000
+	.byte %00111000
+	.byte %00111000
+	.byte %01111100
 
 ;===============================================================================
-; $3308-$7FFF  Free memory.  
+; $3308-$7FFF  Free memory.
 
 
 ;===============================================================================
 ; $8000-$BFFF  Cartridge B (right cartridge) (8K).
 ;              A right cart is only possible (and rarely so) on Atari 800.
 ;              16K cart in the A or left slot also occupies this space.
-;              Free memory if no cartridge is installed. 
+;              Free memory if no cartridge is installed.
 
 
 ;===============================================================================

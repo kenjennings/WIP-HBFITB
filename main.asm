@@ -1,3 +1,5 @@
+; hbfitb_main.asm
+;
 ; --------------------------------------------------------------------
 ; 6502 assembly on Atari.
 ; Built with eclipse/wudsn/mads.
@@ -6,8 +8,8 @@
 
 ; Hack up a display list with Mode 7 text.
 ; Display Text.
-; Define candles as character set graphics. 
-; Display "candles" with animated flames 
+; Define candles as character set graphics.
+; Display "candles" with animated flames
 ; Run a VBI to flip character sets, and scroll colors.
 ; Run a display kernal to update colors.
 ; COLPF0 = text
@@ -18,20 +20,20 @@
 ; ==========================================================================
 ; System Includes
 
-	icl "ANTIC.asm" 
+	icl "ANTIC.asm"
 	icl "GTIA.asm"
 	icl "POKEY.asm"
 	icl "PIA.asm"
 	icl "OS.asm"
 	icl "DOS.asm" ; This provides the LOMEM, start, and run addresses.
-	
-	
+
+
 ; ==========================================================================
 ; Macros (No code/data declared)
 
 	icl "macros.asm"
 	icl "macros_screen.asm"
-	icl "macros_math.asm"
+;	icl "macros_math.asm"
 
 .if DO_DIAG=1
 	icl "macros_diag.asm"
@@ -49,7 +51,7 @@
 
 
 ; ==========================================================================
-; This is not a complicated program, so need not be careful about RAM.  
+; This is not a complicated program, so need not be careful about RAM.
 ; Just set code at a convenient place after DOS, DUP, etc.
 
 	ORG LOMEM_DOS_DUP; $3308  From DOS.asm.  First memory after DOS and DUP
@@ -65,7 +67,7 @@ PRG_START
 ; Initialize
 
 	; Turn off screen
-	lda #0  
+	lda #0
 	sta SDMCTL ; OS Shadow for DMA control
 
 	; Wait for frame update before touching other display configuration
@@ -73,20 +75,20 @@ PRG_START
 
 	; point ANTIC to the new display.
 	mLoadInt_V SDLSTL,vsDisplayList
-	
+
 	; Turn the display back on.
 	lda #ENABLE_DL_DMA|PLAYFIELD_WIDTH_NORMAL
 	sta SDMCTL
 
-	; Set colors for screen. The values are already in page 
+	; Set colors for screen. The values are already in page
 	; zero memory variables.
-	jsr gResetColors 
+	jsr gResetColors
 
 	; Fill the bytes of screen memory. (40x25) display.
 	mScreenFillMem 33 ; This is the internal code for 'A'
 
-	; Display a text banner on screen explaining this modification. 
-	jsr libScreenBanner 
+	; Display a text banner on screen explaining this modification.
+	jsr libScreenBanner
 
 	jsr gClearTime ; reset jiffy clock
 
@@ -96,7 +98,7 @@ PRG_START
 
 gMainLoop
 
-	lda RTCLOK+1     ; Get value of clock incremented after 256 frames. 
+	lda RTCLOK+1     ; Get value of clock incremented after 256 frames.
 
 bLoopToDelay             ; 256 frames is about 4.27 second on an NTSC Atari.
 .if DO_DIAG=1
@@ -104,17 +106,17 @@ bLoopToDelay             ; 256 frames is about 4.27 second on an NTSC Atari.
 	mDiagByte RTCLOK+1,11
 	mDiagByte RTCLOK+2,14
 .endif
-	cmp RTCLOK+1 
+	cmp RTCLOK+1
 	beq bLoopToDelay ; When it changes, then we've paused long enough.
 
 	jsr gRandomize   ; choose new colors for screen
-	
+
 	jsr gResetColors ; Set New colors for screen
 
 	lda #$00         ; Turn off the OS color cycling/anti-screen burn-in
 	sta ATRACT
-	
-	jmp gMainLoop 
+
+	jmp gMainLoop
 
 
 ;===============================================================================
@@ -122,7 +124,7 @@ bLoopToDelay             ; 256 frames is about 4.27 second on an NTSC Atari.
 ;
 ; Choose new colors for background and screen, but selectively filter
 ; values to insure readable text at all times.
-; 
+;
 ; Bright text backgrounds need dark text.
 ; Dark backgound needs light text.
 
@@ -138,15 +140,15 @@ gRandomize
 
 	; "Light" Text.  Guarantee the text is 8 brightness or greater.
 	lda RANDOM
-	ora #$08           ; Force minimum brightness dialed up to 8. 
+	ora #$08           ; Force minimum brightness dialed up to 8.
 	bne bExitRandomize ; Guaranteed that the Z flag is not set now.
 
 bDarkText ; Dark text.  Force off the highest luminance bit.
 	lda RANDOM
 	and #$06          ; Turn off bit $08.  Allow only $04 and $02 to be on.
-	
+
 bExitRandomize
-	sta zbColor1      ; set text brightness 
+	sta zbColor1      ; set text brightness
 	rts
 
 
@@ -182,13 +184,13 @@ gResetColors
 
 ; ==========================================================================
 ; Library code and data.
- 	
+
  	icl "lib_screen.asm"
 
 .if DO_DIAG=1
 	icl "lib_diag.asm"
 .endif
-	
+
 	END
 
 
