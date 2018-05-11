@@ -1,5 +1,5 @@
 # WIP-HBFITB
-Work In Progress - Happy Birthday (fill in the blank) 
+Work In Progress - Atari Retro Happy Birthday (fill in the blank) 
 
 This is an upgrade from last year's Atari retro birthday card.  It does the following:
 
