@@ -18,3 +18,5 @@ This is an upgrade from last year's retro birthday card.  It does the following:
 * No music.  Maybe next year.
 
 Building depends on the MADS include library here: https://github.com/kenjennings/Atari-Mads-Includes.   The includes are related to the AGD (Atari Game Development) project https://github.com/kenjennings/AGD-MADS, but nothing in that project should be required here.
+
+The lib_screen.asm here is a version of the library in the game repositories referenced above, but has been reduced to only the base, minimal fucntions needed for this program.  So, do not look to it as an example of anything worthwhile.  Do not ask it any questions.  Do not give it food, water, or matches.
