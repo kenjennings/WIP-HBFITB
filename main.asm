@@ -33,21 +33,12 @@
 
 	icl "macros.asm"
 	icl "macros_screen.asm"
-;	icl "macros_math.asm"
-
-.if DO_DIAG=1
-	icl "macros_diag.asm"
-.endif
+	icl "macros_math.asm"
 
 ; ==========================================================================
 ; Game Specific, Page 0 Declarations, etc.
 
 	icl "Memory.asm"
-
-
-; ==========================================================================
-; Inform DOS of the program's Auto-Run address...
-	mDiskDPoke DOS_RUN_ADDR, PRG_START
 
 
 ; ==========================================================================
@@ -59,6 +50,7 @@
 
 ;===============================================================================
 
+ .byte "7777777777777777"
 
 PRG_START
 
@@ -76,21 +68,24 @@ PRG_START
 	; point ANTIC to the new display.
 	mLoadInt_V SDLSTL,vsDisplayList
 
+;	jsr libCopyMode7CSet ; Copy ROM charset to RAM
+
+;	jsr libCopyCustomChars ; redefine the custom characters
+
+;	lda #>CSET1 ; point to custom character set
+;	sta CHBAS
+
+	lda #$58 
+	sta COLOR1  ; wax candle body (not the burning part)
+
+
 	; Turn the display back on.
 	lda #ENABLE_DL_DMA|PLAYFIELD_WIDTH_NORMAL
 	sta SDMCTL
 
-	; Set colors for screen. The values are already in page
-	; zero memory variables.
-	jsr gResetColors
+	lda #0  ; reset jiffy clock
+	sta RTCLOK60
 
-	; Fill the bytes of screen memory. (40x25) display.
-	mScreenFillMem 33 ; This is the internal code for 'A'
-
-	; Display a text banner on screen explaining this modification.
-	jsr libScreenBanner
-
-	jsr gClearTime ; reset jiffy clock
 
 
 ;===============================================================================
@@ -98,98 +93,72 @@ PRG_START
 
 gMainLoop
 
-	lda RTCLOK+1     ; Get value of clock incremented after 256 frames.
+	; Wait for the top of the displayed screen.
+	mScreenWaitScanLine_V 8
 
-bLoopToDelay             ; 256 frames is about 4.27 second on an NTSC Atari.
-.if DO_DIAG=1
-	mDiagByte RTCLOK,8
-	mDiagByte RTCLOK+1,11
-	mDiagByte RTCLOK+2,14
-.endif
-	cmp RTCLOK+1
-	beq bLoopToDelay ; When it changes, then we've paused long enough.
+	ldx #17; ("8" above should mean 16 for scan lines. Plus 1 for next line is 17.) 
+	ldy zbFlameIndex ; Variable index for flame colors.
 
-	jsr gRandomize   ; choose new colors for screen
+bColorLoop
+	lda FLAME_COLORS,y
+	sta WSYNC
+	sta COLPF2
+	lda TEXT_COLORS,x
+	sta COLPF0
+	inx
+	iny
 
-	jsr gResetColors ; Set New colors for screen
+	lda VCOUNT       ; Reached the bottom of the screen?
+	cmp #90
+	bne bColorLoop   ; No, go back and make more color.
+
+	; "End of Frame" activities to manage the cycling colors 
+	; and flame animation.  This should be done as part of 
+	; a VBI.  I'm just too lazy.
+	
+	inc zbFlameIndex ; Change the flame starting point for
+	inc zbFlameIndex ; the next frame.  INC twice is faster.
 
 	lda #$00         ; Turn off the OS color cycling/anti-screen burn-in
 	sta ATRACT
 
-	jmp gMainLoop
+	; "Animation."  flip to the next character set every 3rd TV frame
+	lda RTCLOK60  ; jiffy clock, one tick per frame. approx 1/60th/sec NTSC
+	cmp #3
+	bne bSkipAnim ; Only do the animation every Nth frame
 
+	lda #0       ; Force the jiffy/frame counter back to 0.
+	sta RTCLOK60
 
-;===============================================================================
-; Randomize
-;
-; Choose new colors for background and screen, but selectively filter
-; values to insure readable text at all times.
-;
-; Bright text backgrounds need dark text.
-; Dark backgound needs light text.
+	; Flip to the next character set
+	ldx zbTextIndex
+	lda FLIP_FONT_LIST,x
+;	sta CHBAS
+	; Update counter for next time.
+	inx
+	txa
+	and #$03 ; 0, 1, 2, 3, 0, 1, ...
+	sta zbTextIndex
 
-gRandomize
-	lda RANDOM
-	sta zbColbak  ; Border color can be anything.
+bSkipAnim
 
-	lda RANDOM
-	sta zbColor2  ; Text background
-
-	and #$08      ; Is luminance 8 (or more)?  Then the background is "bright."
-	bne bDarkText ; therefore, we need dark text.
-
-	; "Light" Text.  Guarantee the text is 8 brightness or greater.
-	lda RANDOM
-	ora #$08           ; Force minimum brightness dialed up to 8.
-	bne bExitRandomize ; Guaranteed that the Z flag is not set now.
-
-bDarkText ; Dark text.  Force off the highest luminance bit.
-	lda RANDOM
-	and #$06          ; Turn off bit $08.  Allow only $04 and $02 to be on.
-
-bExitRandomize
-	sta zbColor1      ; set text brightness
-	rts
-
-
-;===============================================================================
-; clearTime
-;
-; Zero the system jiffy clock updated during the vertical blank.
-
-gClearTime
-	lda #$00
-	sta RTCLOK60 ; $14 ; jiffy clock, one tick per frame. approx 1/60th/sec NTSC
-	sta RTCLOK+1 ; $13 ; 256 frame counter
-	sta RTCLOK   ; $12 ; 65,536 frame counter, Highest byte
+	jmp gMainLoop ; Do while More Electricity
 
 	rts
 
-
-;===============================================================================
-; resetColors
-;
-; Reload the OS shadow color registers from the values in the page 0 variables.
-
-gResetColors
-	mScreenSetColors_M zbColBak,zbColor0,zbColor1,zbColor2,zbColor3
-
-.if DO_DIAG=1
-	mDiagByte zbColBak, 48
-	mDiagByte zbColor1, 59
-	mDiagByte zbColor2, 70
-.endif
-	rts
-
+ .byte "6666666666666666"
 
 ; ==========================================================================
 ; Library code and data.
 
  	icl "lib_screen.asm"
 
-.if DO_DIAG=1
-	icl "lib_diag.asm"
-.endif
+
+; ==========================================================================
+; Inform DOS of the program's Auto-Run address...
+
+	mDiskDPoke DOS_RUN_ADDR, PRG_START
+
 
 	END
 
