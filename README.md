@@ -1,7 +1,7 @@
 # WIP-HBFITB
 Work In Progress - Happy Birthday (fill in the blank) 
 
-This is an upgrade from last year's retro birthday card.  It does the following:
+This is an upgrade from last year's Atari retro birthday card.  It does the following:
 
 * Create a custom dsplay list of 14 lines of ANTIC Mode 7 text (color text 16 scan lines tall).
 
