@@ -1,7 +1,15 @@
 # WIP-HBFITB
 Work In Progress - Atari Retro Happy Birthday (fill in the blank) 
 
-This is an upgrade from last year's Atari retro birthday card.  It does the following:
+Build with eclipse/wudsn and MADS assembler.
+
+This is an Atari 8-bit computer assembly program that displays a birthday greeting with burning candles, and animates the candle flames.   No music. 
+
+[![AtariHBFITBScreen](https://github.com/kenjennings/WIP-HBFITB/raw/master/HappyBdayYourNameHere.png)](#features)
+
+==========
+
+This is an upgrade from last year's Atari retro birthday card which was just a lame Atari BASIC program using a GRAPHICS 2 display for text.  This assembly language program does the following:
 
 * Create a custom dsplay list of 14 lines of ANTIC Mode 7 text (color text 16 scan lines tall).
 
