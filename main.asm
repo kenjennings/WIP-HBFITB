@@ -68,12 +68,12 @@ PRG_START
 	; point ANTIC to the new display.
 	mLoadInt_V SDLSTL,vsDisplayList
 
-;	jsr libCopyMode7CSet ; Copy ROM charset to RAM
+	jsr libCopyMode7CSet ; Copy ROM charset to RAM
 
-;	jsr libCopyCustomChars ; redefine the custom characters
+	jsr libCopyCustomChars ; redefine the custom characters
 
-;	lda #>CSET1 ; point to custom character set
-;	sta CHBAS
+	lda #>CSET1 ; point to custom character set
+	sta CHBAS
 
 	lda #$58 
 	sta COLOR1  ; wax candle body (not the burning part)
@@ -109,22 +109,21 @@ bColorLoop
 	iny
 
 	lda VCOUNT       ; Reached the bottom of the screen?
-	cmp #90
+	cmp #111
 	bne bColorLoop   ; No, go back and make more color.
-
-	; "End of Frame" activities to manage the cycling colors 
-	; and flame animation.  This should be done as part of 
-	; a VBI.  I'm just too lazy.
 	
-	inc zbFlameIndex ; Change the flame starting point for
-	inc zbFlameIndex ; the next frame.  INC twice is faster.
+	; "End of Frame" activities to manage the cycling colors 
+	; and flame animation.  This next maintenance part should 
+	; be done as part of a VBI.  I'm just too lazy.
+	
+	inc zbFlameIndex ; Change the flame starting point for the next frame.
 
 	lda #$00         ; Turn off the OS color cycling/anti-screen burn-in
 	sta ATRACT
 
-	; "Animation."  flip to the next character set every 3rd TV frame
+	; "Animation."  flip to the next character set every 7th TV frame
 	lda RTCLOK60  ; jiffy clock, one tick per frame. approx 1/60th/sec NTSC
-	cmp #3
+	cmp #7
 	bne bSkipAnim ; Only do the animation every Nth frame
 
 	lda #0       ; Force the jiffy/frame counter back to 0.
@@ -133,7 +132,7 @@ bColorLoop
 	; Flip to the next character set
 	ldx zbTextIndex
 	lda FLIP_FONT_LIST,x
-;	sta CHBAS
+	sta CHBAS
 	; Update counter for next time.
 	inx
 	txa

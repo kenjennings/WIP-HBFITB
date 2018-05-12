@@ -126,8 +126,8 @@ vsScreenRam ; 14 lines of Mode 7 text is 224 scan lines.
 	.byte "    ",$46,"              ",$85
 	.byte " ",$83,"    BIRTHDAY     ",$46
 	.byte " ",$46,"             ",$84,"    "
-	.byte "    ",$85,"          ",$46,"    "
-	.byte "    ",$46,"  STEVE!     ",$83," " ; Fill In The Blank
+	.byte "     ",$85,"         ",$46,"    "
+	.byte "     ",$46," STEVE!     ",$83," " ; Fill In The Blank
 	.byte "  ",$84,"               ",$46," "
 	.byte "  ",$46,"      ",$85,"          "
 	.byte "         ",$46,"    ",$84,"     "

@@ -27,38 +27,38 @@
 
 FLAME1
 	.byte %00000000
-	.byte %01000000
+	.byte %00000000
+	.byte %00000000
+	.byte %00000000
 	.byte %01110000
-	.byte %11111000
-	.byte %11111110
-	.byte %11111110
-	.byte %01111100
+	.byte %01111000
+	.byte %00111000
 	.byte %00010000
 
 FLAME2
 	.byte %00000000
+	.byte %00000000
+	.byte %00000000
 	.byte %00010000
 	.byte %00111000
-	.byte %01111100
-	.byte %11111110
-	.byte %11111110
-	.byte %01111100
+	.byte %00111000
+	.byte %00111000
 	.byte %00010000
 
 FLAME3
 	.byte %00000000
-	.byte %00001000
+	.byte %00000000
+	.byte %00000000
+	.byte %00000000
 	.byte %00011100
-	.byte %00111110
-	.byte %11111110
-	.byte %11111110
-	.byte %01111100
+	.byte %00111100
+	.byte %00111000
 	.byte %00010000
 
 CANDLE
+	.byte %00111000
 	.byte %00111100
-	.byte %00111000
-	.byte %00111000
+	.byte %00111100
 	.byte %00111000
 	.byte %00111000
 	.byte %00111000
@@ -69,9 +69,9 @@ CANDLE
  
 ; List of Source bitmaps for copying chars
 SOURCE_CHAR ; Address of bitmaps
-	.word FLAME1,FLAME2,FLAME3,CANDLE
+	.word FLAME1,FLAME2,FLAME2,CANDLE
 	.word FLAME2,FLAME1,FLAME3,CANDLE
-	.word FLAME2,FLAME3,FLAME1,CANDLE
+	.word FLAME3,FLAME3,FLAME1,CANDLE
 
  .byte "BBBBBBBBBBBBBBBB"
 
