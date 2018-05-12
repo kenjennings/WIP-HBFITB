@@ -17,7 +17,7 @@ This is an upgrade from last year's Atari retro birthday card which was just a l
 
 * Defines screen memory containing text "Happy Birthday FillInTheBlank" with candles.
 
-* Create three character sets in RAM and copies the ROM images to them.
+* Allocates three character sets in RAM and copies the Operating System ROM character set images to them.
 
 * Updates the images in each character set to represent a candle and different shapes of flames.
 
