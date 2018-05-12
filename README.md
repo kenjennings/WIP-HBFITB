@@ -1,5 +1,5 @@
 # WIP-HBFITB
-Work In Progress - Atari Retro Happy Birthday (fill in the blank) 
+Atari Retro Happy Birthday (fill in the blank) 
 
 Build with eclipse/wudsn and MADS assembler.
 
