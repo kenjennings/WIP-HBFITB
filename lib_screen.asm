@@ -22,8 +22,6 @@
 ; Memory file, but these are not accessed by ANTIC directly.  
 ; These are master bitmaps to copy to the displayed character 
 ; sets.  Therefore these are just "data".
- 
- .byte "DDDDDDDDDDDDDDDDDDDD"
 
 FLAME1
 	.byte %00000000
@@ -64,8 +62,6 @@ CANDLE
 	.byte %00111000
 	.byte %00111000
 	.byte %01111100
-
- .byte "CCCCCCCCCCCCCCCC"
  
 ; List of Source bitmaps for copying chars
 SOURCE_CHAR ; Address of bitmaps
@@ -73,28 +69,25 @@ SOURCE_CHAR ; Address of bitmaps
 	.word FLAME2,FLAME1,FLAME3,CANDLE
 	.word FLAME3,FLAME3,FLAME1,CANDLE
 
- .byte "BBBBBBBBBBBBBBBB"
-
 ; List of the Target characters to redefine
 TARGET_CHAR ; offsets for chars 3, 4, 5, 6, or +24, +32, +40, +48
 	.word CSET1+$18,CSET1+$20,CSET1+$28,CSET1+$30
 	.word CSET2+$18,CSET2+$20,CSET2+$28,CSET2+$30
 	.word CSET3+$18,CSET3+$20,CSET3+$28,CSET3+$30
 
- .byte $AA,$AA,$AA,$AA,$AA,$AA,$AA,$AA,$AA,$AA,$AA,$AA,$AA,$AA,$AA,$AA
-
 ; List of fonts switched between frames for "animation".
 FLIP_FONT_LIST
 	.byte >CSET1,>CSET2,>CSET3,>CSET2
-
- .byte "9999999999999999"
 
 ; I irrationally feel better when a list of 
 ; 256 values is all inside one page.
 
 	.align $100
 
-	; List of colors by scan line for flames.
+; List of colors by scan line for flames.
+; Mostly red, yellow, oranges. 
+; There is one segment of black to make a flicker.
+; There is one segment of blue, just because.
 FLAME_COLORS
 ;16 1
 	.byte $EE,$EC,$EA
@@ -111,7 +104,7 @@ FLAME_COLORS
 ;16 3
 	.byte $DE,$DC,$DA
 	.byte $DE,$DC,$DA,$D8,$D6
-	.byte $00,$00,$00,$00,$00
+	.byte $00,$00,$00,$00,$00   ; yes, black is intentional to add a flicker to off.
 	.byte $00,$00,$00
 
 ;16 4
@@ -154,7 +147,7 @@ FLAME_COLORS
 	.byte $16,$18,$1A,$1C,$1E
 	.byte $1A,$1C,$1E
 	.byte $8A,$8C,$8E
-	.byte $86,$88,$8A,$8C,$8E
+	.byte $86,$88,$8A,$8C,$8E ; and one shot of blue.
 
 ;16 11
 	.byte $26,$28,$2A,$2C,$2E
@@ -206,22 +199,19 @@ TEXT_COLORS
 	.byte 0
 	.endr
 	.byte $9C,$9C,$9C,$9C,$9C,$9A,$9A,$9A,$9A,$98,$98,$98,$96,$96,$94,$92 ; blue Fill In The Blank
-	.rept 48 ; 3 lines of ANTIC 7 text
+	; This could be 48 bytes of 0 to cover 3 lines of ANTIC 7 text, but 
+	; this data does not matter, because there is no more use of 
+	; COLPF0 on the screen after this point.
 	.byte 0
-	.endr
 
 
  .align $0100
-
- .byte "8888888888888888"
 
  
 ; Not so re-usable copy from ROM to the three
 ; character sets in RAM.
 ; Copies only the first two pages, since Mode 7
 ; character sets are 512 bytes.
-
-	.byte " libCopyMode7CSet ================ "
 
 libCopyMode7CSet
 	ldx #$00
@@ -258,8 +248,6 @@ blCM7C_LoopPage
 ;     Next y
 ; Next x
 
-	.byte " libCopyCustomChars ================ "
-
 libCopyCustomChars
 	ldx #0 ; The copy counter 
 
@@ -292,9 +280,6 @@ blCCC_CopyBytes      ; copy 8 bytes
 	rts
 
 
-
-
-
 ;==============================================================================
 ;                                                       SCREENWAITSCANLINE  A
 ;==============================================================================
@@ -302,8 +287,6 @@ blCCC_CopyBytes      ; copy 8 bytes
 ;
 ; ScreenWaitScanLine expects  A  to contain the target scanline.
 ;==============================================================================
-
-	.byte " libScreenWaitScanLine ================ "
 
 libScreenWaitScanLine
 
@@ -327,8 +310,6 @@ bLoopWaitScanLine
 ;
 ; ScreenWaitFrame uses  A
 ;==============================================================================
-
-	.byte " libScreenWaitFrames ================ "
 	
 libScreenWaitFrames
     tay
@@ -351,8 +332,6 @@ bExitWaitFrames
 ;
 ; ScreenWaitFrame  uses A
 ;==============================================================================
-
-	.byte " libScreenWaitFrame ================ "
 	
 libScreenWaitFrame
     lda RTCLOK60  ; Read the jiffy clock incremented during vertical blank.

@@ -148,16 +148,12 @@ vsDisplayList ; 14*16 = 224 scan lines of ANTIC goodness
 	.byte DL_JUMP_VB    ; End.  Wait for Vertical Blank.
 	.word vsDisplayList ; Restart the Display List
 
-.byte "FFFFFFFFFFFFFFFF"
-
 ; Align to next nearest 1/2 K boundary for Mode 7 character set
 	.align $0200
 
 CSET1 .ds 512
 CSET2 .ds 512
 CSET3 .ds 512
-
- .byte "EEEEEEEEEEEEEEEE"
 
 
 ;===============================================================================
