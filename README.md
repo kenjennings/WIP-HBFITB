@@ -7,7 +7,7 @@ This is an Atari 8-bit computer assembly program that displays a birthday greeti
 
 [![AtariHBFITBScreen](https://github.com/kenjennings/WIP-HBFITB/raw/master/HappyBdayYourNameHere.png)](#features)
 
-==========
+---
 
 This is an upgrade from last year's Atari retro birthday card which was just a lame Atari BASIC program using a GRAPHICS 2 display for text.  This assembly language program does the following:
 
