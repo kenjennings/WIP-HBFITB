@@ -82,7 +82,7 @@ PRG_START
 	lda #ENABLE_DL_DMA|PLAYFIELD_WIDTH_NORMAL
 	sta SDMCTL
 
-	lda #0  ; reset jiffy clock
+	lda #0  ; reset jiffy clock 
 	sta RTCLOK60
 
 
@@ -95,21 +95,22 @@ gMainLoop
 	; Wait for the top of the displayed screen.
 	mScreenWaitScanLine_V 8
 
-	ldx #17; ("8" above should mean 16 for scan lines. Plus 1 for next line is 17.) 
+	ldx #0;
 	ldy zbFlameIndex ; Variable index for flame colors.
 
 bColorLoop
-	lda FLAME_COLORS,y
-	sta WSYNC
-	sta COLPF2
-	lda TEXT_COLORS,x
-	sta COLPF0
-	inx
-	iny
+	lda FLAME_COLORS,y  ; Get a color for flames.
+	sta WSYNC           ; sync to the end of the scan line.
+	sta COLPF2          ; upodate the flame color.
+	lda TEXT_COLORS,x   ; Get a color for text.
+	sta COLPF0          ; update the text color.
 
-	lda VCOUNT       ; Reached the bottom of the screen?
+	inx                 ; increment X and Y index for the colors
+	iny                 ; on the next line.
+
+	lda VCOUNT          ; Reached the bottom of the screen?
 	cmp #111
-	bne bColorLoop   ; No, go back and make more color.
+	bne bColorLoop      ; No, go back and make more color.
 	
 	; "End of Frame" activities to manage the cycling colors 
 	; and flame animation.  This next maintenance part should 
@@ -121,28 +122,32 @@ bColorLoop
 	sta ATRACT
 
 	; "Animation."  flip to the next character set every 7th TV frame
-	lda RTCLOK60  ; jiffy clock, one tick per frame. approx 1/60th/sec NTSC
+	lda RTCLOK60     ; jiffy clock, one tick per frame. approx 1/60th/sec NTSC
 	cmp #7
-	bne bSkipAnim ; Only do the animation every Nth frame
+	bne bSkipAnim    ; Only do the animation every Nth frame
 
-	lda #0       ; Force the jiffy/frame counter back to 0.
+	lda #0           ; Force the jiffy/frame counter back to 0.
 	sta RTCLOK60
 
 	; Flip to the next character set
-	ldx zbTextIndex
-	lda FLIP_FONT_LIST,x
-	sta CHBAS
-	; Update counter for next time.
-	inx
+	ldx zbTextIndex      ; Get the index for the list of character sets
+	lda FLIP_FONT_LIST,x ; Get the page of the next character set.
+	sta CHBAS            ; Save in the OS shadow register which will update 
+						 ; the hardware during the vertical blank.
+	
+	; Update counter for the next time throiugh the loop.
+	; Force counter to loop 0 to 3, then 0 to 3, etc.
+	inx             ; increment to next position in table.
 	txa
-	and #$03 ; 0, 1, 2, 3, 0, 1, ...
-	sta zbTextIndex
+	and #$03        ; limit it to 0, 1, 2, 3, 0, 1, ...
+	sta zbTextIndex ; save the new value.
 
 bSkipAnim
 
-	jmp gMainLoop ; Do while More Electricity
+	jmp gMainLoop ; Do While More Electricity
 
 	rts
+
 
 ; ==========================================================================
 ; Library code and data.

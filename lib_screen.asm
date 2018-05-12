@@ -186,9 +186,16 @@ FLAME_COLORS
 	.byte $FE,$FC,$FA,$F8,$F6
 
 ; List of colors by scan line for text.
+; Note that a lot of data is eliminated.
+; There is no need for bytes for scan lines skipped at the top of the screen.
+; there is no need for any color bytes after the last text on the screen even 
+; though the color kernel is still cycling.  Changing COLPF0 with whatever 
+; values happen to be in memory has no effect, because there are no pixels
+; using COLPF0 on the screen.
+
 TEXT_COLORS
-	.rept 64 ; 4 lines of ANTIC 7 text
-	.byte 0
+	.rept 47 
+	.byte $0 
 	.endr
 	.byte $2C,$2C,$2C,$2C,$2C,$2A,$2A,$2A,$2A,$28,$28,$28,$26,$26,$24,$22 ; orange Happy
 	.rept 32 ; 2 lines of ANTIC 7 text
@@ -202,7 +209,6 @@ TEXT_COLORS
 	; This could be 48 bytes of 0 to cover 3 lines of ANTIC 7 text, but 
 	; this data does not matter, because there is no more use of 
 	; COLPF0 on the screen after this point.
-	.byte 0
 
 
  .align $0100
