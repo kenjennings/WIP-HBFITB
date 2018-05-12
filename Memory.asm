@@ -118,18 +118,18 @@ SCREENRAM
 ; $C0 = 11xx.xxxx = COLPF3
 
 vsScreenRam ; 14 lines of Mode 7 text is 224 scan lines.
-	.byte "     ",$83,"              "
-	.byte "     ",$46,"        ",$84,"     "
-	.byte "  ",$85,"           ",$46,"     "
-	.byte "  ",$46,"    HAPPY    ",$83,"   "
+	.byte "   ",$83,"                "
+	.byte "   ",$46,"          ",$84,"     "
+	.byte " ",$85,"            ",$46,"     "
+	.byte " ",$46,"     HAPPY    ",$83,"   "
 	.byte "    ",$84,"           ",$46,"   "
 	.byte "    ",$46,"              ",$85
-	.byte " ",$83,"    BIRTHDAY     ",$46
-	.byte " ",$46,"             ",$84,"    "
-	.byte "     ",$85,"         ",$46,"    "
-	.byte "     ",$46," STEVE!     ",$83," " ; Fill In The Blank
-	.byte "  ",$84,"               ",$46," "
-	.byte "  ",$46,"      ",$85,"          "
+	.byte "  ",$83,"   BIRTHDAY     ",$46
+	.byte "  ",$46,"              ",$84,"  "
+	.byte $85,"                ",$46,"  "
+	.byte $46,"  FILLINTHEBLANK ",$83," " ; To Whom it may concern.
+	.byte "   ",$84,"              ",$46," "
+	.byte "   ",$46,"     ",$85,"          "
 	.byte "         ",$46,"    ",$84,"     "
 	.byte "              ",$46,"     "
 
