@@ -1,7 +1,15 @@
 # WIP-HBFITB
 Atari Retro Happy Birthday (fill in the blank) 
 
-Build with eclipse/wudsn and MADS assembler.
+---
+
+Build with eclipse/WUDSN and MADS assembler.
+
+The MADS 6502 assembler is here: http://http://mads.atari8.info
+
+Build in eclipse from the WUDSN ide.  WUDSN can be found here: https://www.wudsn.com/index.php
+
+---
 
 This is an Atari 8-bit computer assembly program that displays a birthday greeting with burning candles, and animates the candle flames.   No music. 
 
